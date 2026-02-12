@@ -1,0 +1,23 @@
+listen: ":4000"
+
+model_list:
+  - model_name: opus
+    params:
+      model: glm-5
+      api_base: https://your-upstream.example.com
+      api_key: ${UPSTREAM_API_KEY}
+      auth_type: x-api-key # x-api-key | bearer
+
+  - model_name: sonnet
+    params:
+      model: glm-5
+      api_base: https://your-upstream.example.com
+      api_key: ${UPSTREAM_API_KEY}
+      auth_type: x-api-key # x-api-key | bearer
+
+  - model_name: haiku
+    params:
+      model: glm-4.7
+      api_base: https://your-upstream.example.com
+      api_key: ${UPSTREAM_API_KEY}
+      auth_type: x-api-key # x-api-key | bearer

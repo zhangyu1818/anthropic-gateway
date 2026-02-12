@@ -1,0 +1,29 @@
+# Go binaries
+/anthropic-gateway
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Coverage
+*.coverprofile
+coverage.out
+
+# Local config / secrets
+config.yaml
+.env
+.env.*
+!.env.example
+
+# Logs / temp
+*.log
+tmp/
+*.tmp
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

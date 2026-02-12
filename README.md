@@ -41,13 +41,47 @@ go build -o anthropic-gateway ./cmd/anthropic-gateway
 ./anthropic-gateway -c config.yaml
 ```
 
+## Autostart (macOS)
+
+Install launch agent (requires config path):
+
+```bash
+./anthropic-gateway autostart install -c /absolute/path/to/config.yaml
+```
+
+Check status:
+
+```bash
+./anthropic-gateway autostart status
+```
+
+Remove autostart:
+
+```bash
+./anthropic-gateway autostart uninstall
+```
+
 ## Config
 
 ```yaml
-listen: ":8080" # optional, default :8080
+listen: ":4000" # optional, default :4000
 
 model_list:
+  - model_name: opus
+    params:
+      model: glm-5
+      api_base: https://your-upstream.example.com
+      api_key: ${UPSTREAM_API_KEY}
+      auth_type: x-api-key # x-api-key | bearer
+
   - model_name: sonnet
+    params:
+      model: glm-5
+      api_base: https://your-upstream.example.com
+      api_key: ${UPSTREAM_API_KEY}
+      auth_type: x-api-key # x-api-key | bearer
+
+  - model_name: haiku
     params:
       model: glm-4.7
       api_base: https://your-upstream.example.com

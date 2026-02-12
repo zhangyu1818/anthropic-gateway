@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build release artifacts
+        env:
+          APP_NAME: anthropic-gateway
+          VERSION: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          DIST_DIR="dist"
+          mkdir -p "${DIST_DIR}"
+
+          TARGETS=(
+            "darwin/amd64"
+            "darwin/arm64"
+            "linux/amd64"
+            "linux/arm64"
+            "windows/amd64"
+          )
+
+          for target in "${TARGETS[@]}"; do
+            IFS='/' read -r GOOS GOARCH <<<"${target}"
+            BASE_NAME="${APP_NAME}_${VERSION}_${GOOS}_${GOARCH}"
+            EXT=""
+
+            if [ "${GOOS}" = "windows" ]; then
+              EXT=".exe"
+            fi
+
+            BIN_NAME="${BASE_NAME}${EXT}"
+            BIN_PATH="${DIST_DIR}/${BIN_NAME}"
+
+            CGO_ENABLED=0 GOOS="${GOOS}" GOARCH="${GOARCH}" \
+              go build -trimpath -ldflags="-s -w" -o "${BIN_PATH}" ./cmd/anthropic-gateway
+
+            if [ "${GOOS}" = "windows" ]; then
+              (
+                cd "${DIST_DIR}"
+                zip -q "${BASE_NAME}.zip" "${BIN_NAME}"
+                rm -f "${BIN_NAME}"
+              )
+            else
+              tar -C "${DIST_DIR}" -czf "${DIST_DIR}/${BASE_NAME}.tar.gz" "${BIN_NAME}"
+              rm -f "${BIN_PATH}"
+            fi
+          done
+
+          (
+            cd "${DIST_DIR}"
+            sha256sum * > checksums.txt
+          )
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/checksums.txt
